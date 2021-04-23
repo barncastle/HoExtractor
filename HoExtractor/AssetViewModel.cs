@@ -35,8 +35,7 @@ namespace HoExtractor
 
         public AssetEntryView(IEnumerable<AssetEntry> source) : base(new List<AssetEntry>())
         {
-            // Properties
-            var propertyList = new List<PropertyDescriptor>
+            var propertyList = new PropertyDescriptor[]
             {
                 new Property<string>("Name", (item, p) => item.Name),
                 new Property<uint>("Flags", (item, p) => item.Flags),
@@ -45,42 +44,13 @@ namespace HoExtractor
                 new Property<int>("DataSize", (item, p) => item.DataSize),
             };
 
-            Properties = new PropertyDescriptorCollection(propertyList.ToArray());
+            Properties = new PropertyDescriptorCollection(propertyList);
             SourceList = source.ToDictionary(x => x, x => Utils.Stringify(x, Properties));
 
             ((List<AssetEntry>)Items).AddRange(source);
         }
 
-        #region Unused
-
-        public void AddIndex(PropertyDescriptor property)
-        {
-            throw new NotImplementedException();
-        }
-
-        public object AddNew()
-        {
-            throw new NotImplementedException();
-        }
-
-        public string GetListName(PropertyDescriptor[] listAccessors) => null;
-
-        public int Find(PropertyDescriptor property, object key)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void RemoveIndex(PropertyDescriptor property)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void ApplySort(ListSortDescriptionCollection sorts)
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion
+        public PropertyDescriptorCollection GetItemProperties(PropertyDescriptor[] listAccessors) => Properties;
 
         public void ApplySort(PropertyDescriptor property, ListSortDirection direction)
         {
@@ -115,16 +85,13 @@ namespace HoExtractor
 
                 foreach (var item in SourceList)
                     if (item.Value.Contains(filter))
-                        Items.Add(item.Key);
-
-                ApplySort(sortProperty, sortDirection);
+                        Items.Add(item.Key);                
             }
 
             this.filter = filter;
+            ApplySort(sortProperty, sortDirection);
             OnListChanged(new ListChangedEventArgs(ListChangedType.Reset, -1));
         }
-
-        public PropertyDescriptorCollection GetItemProperties(PropertyDescriptor[] listAccessors) => Properties;
 
         public void RemoveSort()
         {
@@ -189,5 +156,21 @@ namespace HoExtractor
             public override void SetValue(object component, object value) => throw new NotSupportedException();
             public override bool ShouldSerializeValue(object component) => false;
         }
+
+        #region Unused
+
+        public void AddIndex(PropertyDescriptor property) => throw new NotImplementedException();
+
+        public object AddNew() => throw new NotImplementedException();
+
+        public string GetListName(PropertyDescriptor[] listAccessors) => null;
+
+        public int Find(PropertyDescriptor property, object key) => throw new NotImplementedException();
+
+        public void RemoveIndex(PropertyDescriptor property) => throw new NotImplementedException();
+
+        public void ApplySort(ListSortDescriptionCollection sorts) => throw new NotImplementedException();
+
+        #endregion
     }
 }
