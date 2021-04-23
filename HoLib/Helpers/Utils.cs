@@ -19,7 +19,7 @@ namespace HoLib.Helpers
         public static uint DKDRHash(string value)
         {
             value = value.ToUpper();
-            
+
             var hash = 0u;
             for (var i = 0; i < value.Length; i++)
                 hash = (hash * DKDRSeed) + value[i];

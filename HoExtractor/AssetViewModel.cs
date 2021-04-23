@@ -46,7 +46,7 @@ namespace HoExtractor
             };
 
             Properties = new PropertyDescriptorCollection(propertyList.ToArray());
-            SourceList = source.ToDictionary(x => x, x => Utils.Stringify(x, Properties));            
+            SourceList = source.ToDictionary(x => x, x => Utils.Stringify(x, Properties));
 
             ((List<AssetEntry>)Items).AddRange(source);
         }
@@ -106,7 +106,7 @@ namespace HoExtractor
             if (string.IsNullOrEmpty(filter))
             {
                 source.Clear();
-                source.AddRange(SourceList.Keys);                
+                source.AddRange(SourceList.Keys);
             }
             else
             {
@@ -174,7 +174,7 @@ namespace HoExtractor
 
             // default to string compare
             return string.Compare(lhsValue.ToString(), rhsValue.ToString(), true);
-        }     
+        }
 
         private class Property<T> : PropertyDescriptor
         {

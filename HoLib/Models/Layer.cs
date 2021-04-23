@@ -36,8 +36,8 @@ namespace HoLib.Models
             TotalLayerSize = reader.ReadInt32();
             TotalLayerSize2 = reader.ReadInt32();
             PageSize = reader.ReadInt32();
-            Unknown11= reader.ReadInt32();
-            Unknown12= reader.ReadInt32();
+            Unknown11 = reader.ReadInt32();
+            Unknown12 = reader.ReadInt32();
             Unknown13 = reader.ReadInt32();
             SubLayerOffset = reader.ReadInt32();
             Unknown15 = reader.ReadInt32();

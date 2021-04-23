@@ -47,7 +47,7 @@ namespace HoLib.Sections
 
             for (var i = 0; i < SectionCount; i++)
             {
-                if(Sections[i].Type == AssetSectionType.AssetGroup)
+                if (Sections[i].Type == AssetSectionType.AssetGroup)
                 {
                     reader.Seek(offset + Sections[i].StartOffset, SeekOrigin.Begin);
 

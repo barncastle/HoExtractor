@@ -65,7 +65,7 @@ namespace HoLib.Sections
             {
                 var entry = new DirectoryEntry(reader, entrySizes[i]);
                 Entries.Add(entry.AssetID, entry);
-            }                
+            }
         }
     }
 }

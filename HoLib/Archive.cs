@@ -17,7 +17,7 @@ namespace HoLib
         public readonly MAST MAST;
         public readonly TCES TCES;
         public readonly string StringTable;
-        public readonly Section Section;        
+        public readonly Section Section;
 
         public Archive(string filename)
         {
