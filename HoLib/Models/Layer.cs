@@ -8,27 +8,27 @@ namespace HoLib.Models
     {
         public readonly LayerType LayerType;
         public readonly Flags Flags; // unique to each layer
-        public readonly int Unknown2;
-        public readonly int Unknown3;
-        public readonly int Unknown4;
-        public readonly int Unknown5;
-        public readonly int Unknown6;
+        public readonly int Index; // XETP blocks are split into multiple layers
+        public readonly int TCES_Unknown3; // always matches TCES.Unknown3
+        public readonly int Unknown4; // TODO size of something?
+        public readonly int Unknown5; // always 0
+        public readonly int Unknown6; // always -1
         public readonly int PageOffset; // << 11, offset to data 
         public readonly int TotalLayerSize;
         public readonly int TotalLayerSize2;
         public readonly int PageSize; // << 11, game page buffer size
-        public readonly int Unknown11;
-        public readonly int Unknown12;
-        public readonly int Unknown13;
+        public readonly int Unknown11; // always 0
+        public readonly int Unknown12; // always -1
+        public readonly int Unknown13; // always 1
         public readonly int SubLayerOffset;
-        public readonly int Unknown15;
+        public readonly int Unknown15; // always 0
 
         public Layer(EndianAwareBinaryReader reader)
         {
             LayerType = (LayerType)reader.ReadUInt32();
             Flags = reader.ReadUInt32();
-            Unknown2 = reader.ReadInt32();
-            Unknown3 = reader.ReadInt32();
+            Index = reader.ReadInt32();
+            TCES_Unknown3 = reader.ReadInt32();
             Unknown4 = reader.ReadInt32();
             Unknown5 = reader.ReadInt32();
             Unknown6 = reader.ReadInt32();

@@ -13,7 +13,7 @@ namespace HoLib.Sections
     {
         public readonly int Size;
         public readonly int SectionCount;
-        public readonly int Unknown1;
+        public readonly int Unknown1; // always 0
         public readonly AssetSection[] Sections;
         public readonly List<AssetEntry> Entries;
         public readonly Layer Layer;

@@ -11,12 +11,12 @@ namespace HoLib.Sections
     public class Section
     {
         public readonly int LayerCount;
-        public readonly int Unknown1;
+        public readonly int Unknown1; // always 0
         public readonly int SizeOfLayerData;
         public readonly int SizeOfName;
         public readonly int SizeOfChunk;
         public readonly int SizeOfSubLayerData;
-        public readonly int Unknown2;
+        public readonly int Unknown2; // always 0
         public readonly Layer[] Layers;
         public readonly string SectionName;
 

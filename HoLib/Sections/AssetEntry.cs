@@ -16,10 +16,11 @@ namespace HoLib.Sections
         public readonly int Size;
         public readonly int RelativeDataOffset;
         public readonly int DataSize;
-        public readonly int Unknown1;
+        public readonly int Unknown1; // multiple of 4, seen 4, 16, 32
         public readonly ulong AssetID;
         public readonly AssetType AssetType;
-        public readonly int Unknown2;
+        public readonly short Unknown2; // 0 or 1
+        public readonly short Unknown3; // always 1
         private readonly Layer Layer;
 
         public AssetEntry(EndianAwareBinaryReader reader, Layer layer)
@@ -32,7 +33,8 @@ namespace HoLib.Sections
             Unknown1 = reader.ReadInt32();
             AssetID = reader.ReadUInt64(); // this might be a hash of the filepath?
             AssetType = (AssetType)reader.ReadUInt32();
-            Unknown2 = reader.ReadInt32();
+            Unknown2 = reader.ReadInt16();
+            Unknown3 = reader.ReadInt16();
         }
 
         public void Extract(Stream stream, string filename)

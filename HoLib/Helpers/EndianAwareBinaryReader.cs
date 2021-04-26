@@ -36,6 +36,21 @@ namespace HoLib.Helpers
             return Reader.ReadBytes(count);
         }
 
+        public short ReadInt16()
+        {
+            BaseStream.Read(Buffer, 0, 2);
+
+            if (IsBigEndian)
+                return BinaryPrimitives.ReadInt16BigEndian(Buffer);
+            else
+                return BinaryPrimitives.ReadInt16LittleEndian(Buffer);
+        }
+
+        public ushort ReadUInt16()
+        {
+            return unchecked((ushort)ReadInt16());
+        }
+
         public int ReadInt32()
         {
             BaseStream.Read(Buffer, 0, 4);

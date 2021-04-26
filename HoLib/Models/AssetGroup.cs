@@ -6,13 +6,13 @@ namespace HoLib.Models
     public class AssetGroup
     {
         public readonly int Count;
-        public readonly int Unknown1;
+        public readonly int Unknown1; // always -1
 
         public AssetGroup(EndianAwareBinaryReader reader)
         {
             Count = reader.ReadInt32();
             Unknown1 = reader.ReadInt32();
-            reader.Seek(0x18, SeekOrigin.Current); // padding
+            reader.Seek(0x18, SeekOrigin.Current); // padding, 0x74 filled
         }
     }
 }

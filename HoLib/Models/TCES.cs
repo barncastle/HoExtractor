@@ -6,20 +6,20 @@ namespace HoLib.Models
     public class TCES
     {
         public readonly Flags Flags;
-        public readonly int Unknown2;
-        public readonly int Unknown3;
+        public readonly int Unknown2; // always 0
+        public readonly int Unknown3; // flags of some kind?
         public readonly int Size;
-        public readonly int Unknown5;
-        public readonly int Unknown6;
+        public readonly int Unknown5; // always 0
+        public readonly int Unknown6; // always -1
         public readonly int PageOffset; // << 11, offset to section data
         public readonly int SectionSize;
         public readonly int SectionSize2;
-        public readonly int Unknown10;
-        public readonly int Unknown11;
-        public readonly int Unknown12;
-        public readonly int Unknown13;
-        public readonly int Unknown14;
-        public readonly int Unknown15;
+        public readonly int Unknown10; // always -1
+        public readonly int Unknown11; // always 0
+        public readonly int Unknown12; // always -1
+        public readonly int Unknown13; // always 0
+        public readonly int Unknown14; // always -1
+        public readonly int Unknown15; // always 0
 
         public TCES(EndianAwareBinaryReader reader)
         {
