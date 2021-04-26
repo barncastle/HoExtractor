@@ -286,7 +286,7 @@ namespace HoExtractor
             this.Controls.Add(this.tableLayoutPanelMain);
             this.Controls.Add(this.toolStrip1);
             this.Name = "Main";
-            this.Text = "Family Guy Extractor";
+            this.Text = "Ho Extractor";
             this.groupArchives.ResumeLayout(false);
             this.groupFiles.ResumeLayout(false);
             this.tableLayoutPanelFiles.ResumeLayout(false);
