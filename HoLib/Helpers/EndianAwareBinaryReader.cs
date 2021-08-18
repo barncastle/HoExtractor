@@ -1,6 +1,8 @@
-﻿using HoLib.Static;
+﻿using HoLib.Models;
+using HoLib.Static;
 using System;
 using System.Buffers.Binary;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
@@ -83,27 +85,38 @@ namespace HoLib.Helpers
 
         public string ReadString(int length)
         {
-            return Encoding.ASCII.GetString(Reader.ReadBytes(length));
+            return Encoding.Latin1.GetString(Reader.ReadBytes(length));
         }
 
         public string ReadCString()
         {
             byte b;
-            var sb = new StringBuilder(0x40);
+            var sb = new List<byte>(0x40);
 
             while ((b = Reader.ReadByte()) != 0)
-                sb.Append((char)b);
+                sb.Add(b);
 
-            return sb.ToString();
+            return Encoding.Latin1.GetString(sb.ToArray());
         }
 
-        public void AssertTag(params BlockType[] token)
+        public Flags ReadFlags()
+        {
+            // flags are always BE
+            BaseStream.Read(Buffer, 0, 4);
+            return BinaryPrimitives.ReadUInt32BigEndian(Buffer);
+        }
+
+        public BlockType AssertTag(params BlockType[] token)
         {
             var pos = BaseStream.Position;
-            var magic = (BlockType)Reader.ReadInt32();
+            var tag = (BlockType)Reader.ReadInt32();
 
-            if (Array.IndexOf(token, magic) == -1)
+            if(token.Length == 1 && token[0] != tag)
+                throw new Exception($"Expected {token[0]} at {pos}");
+            else if (Array.IndexOf(token, tag) == -1)
                 throw new Exception($"Expected {string.Join("/", token)} at {pos}");
+
+            return tag;
         }
 
         public void Dispose()

@@ -37,7 +37,7 @@ namespace HoExtractor
             foreach (var path in paths)
             {
                 var archive = new Archive(path);
-                lstArchives.Items.Add(new ListViewItem(archive.Section.SectionName)
+                lstArchives.Items.Add(new ListViewItem(archive.Section.Name)
                 {
                     Tag = archive
                 });

@@ -10,93 +10,135 @@ namespace HoLib.Sections
 {
     public class Section
     {
+        public readonly BlockType Tag;
         public readonly int LayerCount;
         public readonly int Unknown1; // always 0
-        public readonly int SizeOfLayerData;
-        public readonly int SizeOfName;
-        public readonly int SizeOfChunk;
-        public readonly int SizeOfSubLayerData;
+        public readonly int NameOffset; // layers + name + padding OR name offset
+        public readonly int NameSize;
+        public readonly int SubLayersOffset; // relative offset
+        public readonly int SubLayersSize; // combined ILayer header size
         public readonly int Unknown2; // always 0
         public readonly Layer[] Layers;
-        public readonly string SectionName;
+        public readonly string Name;
 
-        private readonly long Offset;
-        private readonly List<AssetLayer> AssetLayers;
-        private readonly List<DirectoryLayer> DirectoryLayers;
+        private long Offset;
+        private readonly List<ILayer> SubLayers;
 
         public Section(EndianAwareBinaryReader reader)
         {
             Offset = reader.BaseStream.Position;
-            AssetLayers = new List<AssetLayer>();
-            DirectoryLayers = new List<DirectoryLayer>();
+            SubLayers = new List<ILayer>();
 
-            reader.AssertTag(BlockType.SECT);
+            Tag = reader.AssertTag(BlockType.SECT);
             LayerCount = reader.ReadInt32();
             Unknown1 = reader.ReadInt32();
-            SizeOfLayerData = reader.ReadInt32();
-            SizeOfName = reader.ReadInt32();
-            SizeOfChunk = reader.ReadInt32();
-            SizeOfSubLayerData = reader.ReadInt32();
+            NameOffset = reader.ReadInt32();
+            NameSize = reader.ReadInt32();
+            SubLayersOffset = reader.ReadInt32();
+            SubLayersSize = reader.ReadInt32();
             Unknown2 = reader.ReadInt32();
-            Layers = Utils.CreateArray<Layer>(LayerCount, reader);
-            SectionName = reader.ReadCString();
 
-            // skip padding
-            reader.Seek(Offset + SizeOfChunk, SeekOrigin.Begin);
+            // section data
+            Layers = Utils.CreateArray<Layer>(LayerCount, reader);
+            Name = reader.ReadCString();
+            reader.Seek(Offset + SubLayersOffset, SeekOrigin.Begin); // padding
 
             // read sub layers
             for (var i = 0; i < LayerCount; i++)
-                ReadLayer(reader, Layers[i]);
+                ReadLayer(reader, i);
 
             // append internal names to asset entries
             UpdateAssetEntries();
         }
 
-        public IEnumerable<AssetEntry> GetAssetEntries()
+        public void Write(EndianAwareBinaryWriter writer, Stream source)
         {
-            foreach (var layer in AssetLayers)
-                foreach (var entry in layer.Entries)
-                    yield return entry;
+            Offset = writer.BaseStream.Position;
+
+            writer.WriteTag(Tag);
+            writer.WriteInt32(LayerCount);
+            writer.WriteInt32(Unknown1);
+            writer.WriteInt32(NameOffset);
+            writer.WriteInt32(NameSize);
+            writer.WriteInt32(SubLayersOffset);
+            writer.WriteInt32(SubLayersSize);
+            writer.WriteInt32(Unknown2);
+            writer.Seek(64 * LayerCount, SeekOrigin.Current); // skip layers
+            writer.WriteCString(Name);
+            writer.Align(0x20); // set ptr to Offset + StartOfSubLayers
+            writer.Seek(SubLayersSize, SeekOrigin.Current); // skip sublayers
+
+            writer.Align(0x800);
+
+            // write sublayer data
+            // this also recalcs Layer and SubLayer fields
+            for (var i = 0; i < LayerCount; i++)
+                SubLayers[i].WriteEntries(writer, source);
+
+            // write updated Layer data
+            writer.Seek(Offset + 0x20, SeekOrigin.Begin);
+            Array.ForEach(Layers, l => l.Write(writer));
+
+            // write updated SubLayer data
+            writer.Seek(Offset + SubLayersOffset, SeekOrigin.Begin);
+            SubLayers.ForEach(l => l.Write(writer));
+
+            writer.Seek(0, SeekOrigin.End);
         }
 
-        private void ReadLayer(EndianAwareBinaryReader reader, Layer layer)
+        public IEnumerable<AssetEntry> GetAssetEntries()
         {
-            reader.Seek(Offset + layer.SubLayerOffset, SeekOrigin.Begin);
+            return GetLayers<AssetLayer>()
+                .SelectMany(l => l.Groups
+                .SelectMany(g => g.Entries));
+        }
+
+        private void ReadLayer(EndianAwareBinaryReader reader, int index)
+        {
+            reader.Seek(Offset + Layers[index].SubLayerOffset, SeekOrigin.Begin);
 
             var magic = reader.ReadString(4);
-            switch (magic)
+
+            SubLayers.Add(magic switch
             {
-                case "PSL\0": // Asset layer
-                    AssetLayers.Add(new AssetLayer(reader, layer));
-                    break;
-                case "PSLD": // Directory layer
-                    DirectoryLayers.Add(new DirectoryLayer(reader, layer));
-                    break;
-                default:
-                    throw new NotImplementedException($"SubLayer {magic}");
-            }
+                "PSL\0" => new AssetLayer(reader, Layers[index]),
+                "PSLD" => new DirectoryLayer(reader, Layers[index]) as ILayer,
+                _ => throw new NotImplementedException($"SubLayer {magic}")
+            });
         }
 
         private void UpdateAssetEntries()
         {
             // multiple directory layers can have the same flags
             // but will never duplicate asset ids
-            var directories = DirectoryLayers.ToLookup(x => x.Layer.Flags);
+            var directories = GetLayers<DirectoryLayer>().ToLookup(x => x.Layer.Flags);
 
-            foreach (var assets in AssetLayers)
+            foreach (var asset in GetLayers<AssetLayer>())
             {
                 // layer flags are used to control file overrides so that 
                 // assets can be linked by id and the correct variant will load
                 // therefore we need to match flags for names
-                var directory = directories[assets.Layer.Flags];
+                var directory = directories[asset.Layer.Flags];
 
-                foreach (var entry in assets.Entries)
+                asset.Groups.ForEach(g =>
                 {
-                    foreach (var d in directory)
-                        if (d.ContainsEntry(entry.AssetID))
-                            entry.Name = d.Entries[entry.AssetID].FileName;
-                }
+                    g.Entries.ForEach(e =>
+                    {
+                        foreach (var d in directory)
+                        {
+                            if (d.ContainsEntry(e.AssetID))
+                                e.Name = d.Entries[e.AssetID].FileName;
+                        }
+                    });
+                });
             }
+        }
+
+        private IEnumerable<T> GetLayers<T>() where T : ILayer
+        {
+            foreach (var layer in SubLayers)
+                if (layer is T type)
+                    yield return type;
         }
     }
 }

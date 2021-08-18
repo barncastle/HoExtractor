@@ -1,6 +1,7 @@
 ﻿using HoLib.Helpers;
 using HoLib.Models;
 using HoLib.Static;
+using System;
 using System.IO;
 
 namespace HoLib.Sections
@@ -8,20 +9,22 @@ namespace HoLib.Sections
     /// <summary>
     /// A single asset's meta data
     /// </summary>
-    public class AssetEntry
+    public class AssetEntry : ISection
     {
         public string Name { get; internal set; }
         public Flags Flags => Layer.Flags;
 
-        public readonly int Size;
-        public readonly int RelativeDataOffset;
-        public readonly int DataSize;
+        public int Size; // aligned size
+        public int RelativeDataOffset;
+        public int DataSize;
         public readonly int Unknown1; // multiple of 4, seen 4, 16, 32
         public readonly ulong AssetID;
         public readonly AssetType AssetType;
         public readonly short Unknown2; // 0 or 1
         public readonly short Unknown3; // always 1
+
         private readonly Layer Layer;
+        private byte[] OverrideFileData;
 
         public AssetEntry(EndianAwareBinaryReader reader, Layer layer)
         {
@@ -37,17 +40,52 @@ namespace HoLib.Sections
             Unknown3 = reader.ReadInt16();
         }
 
-        public void Extract(Stream stream, string filename)
+        public void Write(EndianAwareBinaryWriter writer)
         {
-            File.WriteAllBytes(filename, Read(stream));
+            writer.WriteInt32(Size);
+            writer.WriteInt32(RelativeDataOffset);
+            writer.WriteInt32(DataSize);
+            writer.WriteInt32(Unknown1);
+            writer.WriteUInt64(AssetID);
+            writer.WriteUInt32((uint)AssetType);
+            writer.WriteInt16(Unknown2);
+            writer.WriteInt16(Unknown3);
         }
 
-        public byte[] Read(Stream stream)
+        public byte[] ReadData(Stream stream)
         {
             var buffer = new byte[DataSize];
             stream.Seek((Layer.PageOffset << 11) + RelativeDataOffset, SeekOrigin.Begin);
             stream.Read(buffer);
             return buffer;
+        }
+
+        public void WriteData(EndianAwareBinaryWriter writer, Stream source)
+        {
+            writer.WriteBytes(OverrideFileData ?? ReadData(source));
+            writer.Align(0x40);
+            OverrideFileData = null;
+        }
+
+        public void SetData(byte[] data)
+        {
+            if((OverrideFileData = data) != null)
+            {
+                DataSize = data.Length;
+                Size = (DataSize + 63) / 64 << 6; // DRU 64
+            }
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is AssetEntry other &&
+                other.Flags == Flags &&
+                other.AssetID == AssetID;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Flags, AssetID);
         }
     }
 }

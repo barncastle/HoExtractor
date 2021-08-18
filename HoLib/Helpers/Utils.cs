@@ -29,8 +29,10 @@ namespace HoLib.Helpers
 
         public static string CreateDirectory(params string[] paths)
         {
-            var di = new DirectoryInfo(Path.Combine(paths));
+            if (string.IsNullOrEmpty(paths[0]))
+                return "";
 
+            var di = new DirectoryInfo(Path.Combine(paths));
             if (!di.Exists && di.Parent != null)
                 di.Create();
 

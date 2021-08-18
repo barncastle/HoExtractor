@@ -6,7 +6,7 @@
     /// </summary>
     public struct Flags
     {
-        public byte TCES => (byte)(RawValue & 0xFF);
+        public byte TCES => (byte)(RawValue & 0xFF); // this may be an int24 hack as always the 0x33 pad value
         public byte Section => (byte)((RawValue >> 8) & 0xFF);
         public byte Unknown1 => (byte)((RawValue >> 16) & 0xFF);
         public byte Unknown2 => (byte)((RawValue >> 24) & 0xFF); // probably locale?

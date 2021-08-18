@@ -10,9 +10,9 @@ namespace HoLib.Sections
     /// </summary>
     public class DirectoryLayer : ILayer<DirectoryEntry>
     {
-        public readonly int Unknown1;
-        public readonly int AmountOfEntries;
         public readonly int Size;
+        public readonly int AmountOfEntries;
+        public readonly int DataSize;
         public readonly int Unknown2;
         public readonly int Unknown3;
         public readonly int Unknown4;
@@ -25,15 +25,27 @@ namespace HoLib.Sections
             Layer = layer;
             Entries = new Dictionary<ulong, DirectoryEntry>();
 
-            Unknown1 = reader.ReadInt32();
-            AmountOfEntries = reader.ReadInt32();
             Size = reader.ReadInt32();
+            AmountOfEntries = reader.ReadInt32();
+            DataSize = reader.ReadInt32();
             Unknown2 = reader.ReadInt32();
             Unknown3 = reader.ReadInt32();
             Unknown4 = reader.ReadInt32();
             Unknown5 = reader.ReadInt32();
 
             ReadEntries(reader);
+        }
+
+        public void Write(EndianAwareBinaryWriter writer)
+        {
+            writer.WriteString("PSLD", 4);
+            writer.WriteInt32(Size);
+            writer.WriteInt32(Entries.Count);
+            writer.WriteInt32(DataSize);
+            writer.WriteInt32(Unknown2);
+            writer.WriteInt32(Unknown3);
+            writer.WriteInt32(Unknown4);
+            writer.WriteInt32(Unknown5);
         }
 
         public bool ContainsEntry(ulong uid)
@@ -57,7 +69,7 @@ namespace HoLib.Sections
                 entrySizes[i] = reader.ReadInt32();
 
             // skip padding
-            reader.Seek(offset + Size, SeekOrigin.Begin);
+            reader.Seek(offset + DataSize, SeekOrigin.Begin);
 
             // read directories
             Entries.EnsureCapacity(AmountOfEntries);
@@ -66,6 +78,27 @@ namespace HoLib.Sections
                 var entry = new DirectoryEntry(reader, entrySizes[i]);
                 Entries.Add(entry.AssetID, entry);
             }
+        }
+
+        public void WriteEntries(EndianAwareBinaryWriter writer, Stream source)
+        {
+            var offset = writer.BaseStream.Position;
+
+            // sizes for each entry
+            foreach (var entry in Entries)
+                writer.WriteInt32(entry.Value.Size);
+
+            // padding
+            writer.Align(0x40); // Size - (AmountOfEntries * 4)
+
+            // write directories
+            foreach (var entry in Entries)
+                entry.Value.Write(writer);
+
+            writer.Align(0x800);
+
+            // update layer data
+            Layer.PageOffset = (int)(offset >> 11);
         }
     }
 }
